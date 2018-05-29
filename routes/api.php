@@ -13,6 +13,9 @@ Route::group([
     // 'middleware' => 'jwt.auth',
 ], function ($router) use ($v) {
 
+    Route::get($v . '/books/archived', 'BooksController@archived');
+    Route::put($v . '/books/archived/{id}', 'BooksController@restoreArchived');
+    Route::delete($v . '/books/archived/{id}', 'BooksController@destroyArchived');
     Route::resource($v . '/books', 'BooksController');
 
 });

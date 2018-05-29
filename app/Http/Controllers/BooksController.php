@@ -29,6 +29,20 @@ class BooksController extends Controller
         });
     }
 
+
+    public function archived()
+    {
+        return auth()->user()->books()->onlyTrashed()->get([
+            'id',
+            'title',
+            'author',
+            'image_path',
+            'started_at',
+            'finished_at',
+            'rating',
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -75,8 +89,8 @@ class BooksController extends Controller
     {
 
         $this->validate($request, [
-            'title' => 'required',
-            'author' => 'required',
+            'title' => 'sometimes|required',
+            'author' => 'sometimes|required',
             'user_id' =>'required|in:'.auth()->user()->id,
         ]);
 
@@ -90,6 +104,31 @@ class BooksController extends Controller
         return $book->toJson();
     }
 
+
+    public function restoreArchived($id)
+    {
+        $book = Book::withTrashed()->find($id);
+        if ($book->user_id != auth()->user()->id) {
+            return response(401, 'That is not your book!');
+        }
+
+        $book->restore();
+
+        return 'restored';
+    }
+
+    public function destroyArchived($id)
+    {
+        $book = Book::withTrashed()->find($id);
+        if ($book->user_id != auth()->user()->id) {
+            return response(401, 'That is not your book!');
+        }
+
+        $book->forcedelete();
+
+        return 'forcedeleted';
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -99,7 +138,7 @@ class BooksController extends Controller
     public function destroy(Book $book)
     {
         if ($book->user_id != auth()->user()->id) {
-            return response(422, 'That is not your book!');
+            return response(401, 'That is not your book!');
         }
 
         $book->delete();
